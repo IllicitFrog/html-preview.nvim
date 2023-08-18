@@ -1,3 +1,0 @@
-/home/cory/Workspace/neo_webpreview/build/CMakeFiles/nhp.dir
-/home/cory/Workspace/neo_webpreview/build/CMakeFiles/edit_cache.dir
-/home/cory/Workspace/neo_webpreview/build/CMakeFiles/rebuild_cache.dir
