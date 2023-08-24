@@ -27,7 +27,8 @@ M.start = function()
 			end
 		end,
 	})
-	return vim.notify("Neoweb Preview started", vim.log.levels.INFO)
+	vim.notify("Neoweb Preview started", vim.log.levels.INFO)
+  M.preview()
 end
 
 M.preview = function(browse)
