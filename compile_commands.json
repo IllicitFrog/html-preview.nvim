@@ -1,1 +1,6 @@
-compile_commands.json
+[
+{
+  "directory": "/home/cory/Workspace/neo_webpreview",
+  "arguments": ["/usr/bin/clang++", "-c", "-Qunused-arguments", "-m64", "-fvisibility=hidden", "-fvisibility-inlines-hidden", "-O3", "-std=c++17", "-I/usr/include", "-I/usr/local/include", "-Iinclude", "-I", "/home/cory/.xmake/packages/b/boost/1.81.0/b330b1afbeef41099cda41eaa4a53175/include", "-DNDEBUG", "-o", "build/.objs/neo_webpreview/linux/x86_64/release/src/main.cpp.o", "src/main.cpp"],
+  "file": "src/main.cpp"
+}]

@@ -1,15 +1,21 @@
 #pragma once
 #include "livejs.hpp"
 #include "utils.hpp"
-#include <boost/algorithm/string.hpp>
-#include <boost/beast.hpp>
-#include <boost/beast/http/string_body.hpp>
+#include "boost/algorithm/string.hpp"
+#include "boost/beast.hpp"
+#include "boost/beast/http/string_body.hpp"
+#include "boost/url.hpp"
+#include "boost/url/urls.hpp"
 #include <filesystem>
 #include <fstream>
+#include <inja/inja.hpp>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
@@ -19,9 +25,21 @@ using tcp = boost::asio::ip::tcp;
 class server {
 public:
   server();
-  server(unsigned short port_, std::string doc_root_)
-      : acceptor{ioc, {net::ip::make_address("0.0.0.0"), port_}},
-        doc_root(std::move(doc_root_)) {}
+  server(std::string doc_root_, unsigned short port_,
+         const std::string &mustache_file, bool disableljs_,
+         const std::string &address_, std::string index_)
+      : acceptor{ioc, {net::ip::make_address(address_), port_}},
+        doc_root(std::move(doc_root_)), index(std::move(index_)),
+        disableljs(disableljs_) {
+    if (mustache_file != " ") {
+      std::ifstream jsonfile("mustache_file");
+      if (!jsonfile.good()) {
+        throw std::runtime_error("Failed to load specified Mustache file");
+      }
+      mustache_values = nlohmann::json::parse(jsonfile);
+      mustache = true;
+    }
+  }
 
   void run() {
     tcp::socket socket(ioc);
@@ -31,8 +49,13 @@ public:
 
 private:
   std::string doc_root;
+  std::string index;
   net::io_context ioc{1};
   tcp::acceptor acceptor;
+  nlohmann::json mustache_values;
+  bool mustache{};
+  bool disableljs{};
+
   // Return a response for the given request.
   //
   // The concrete type of the response message (which depends on the
@@ -88,20 +111,17 @@ private:
       return bad_request("Illegal request-target");
     }
 
+    std::string reqUrl = req.target();
+
     // Remove any get params
-    if (boost::algorithm::contains(req.target(), L"?")) {
-      std::vector<std::string> result;
-      boost::split(result, req.target(), boost::is_any_of("?"));
-      req.target() = result[0];
-      result.clear();
-      std::cout << req.target();
+    if (boost::url_view(reqUrl).has_query()) {
+      reqUrl = boost::url(reqUrl).remove_query().remove_fragment().c_str();
     }
 
     // Build the path to the requested file
-    std::string path = path_cat(doc_root, req.target());
-
+    std::string path = path_cat(doc_root, reqUrl);
     if (req.target().back() == '/') {
-      path.append("index.html");
+      path.append(index);
     }
 
     beast::string_view mime = mime_type(path);
@@ -116,13 +136,18 @@ private:
       if (file.good()) {
         std::string body = {std::istreambuf_iterator<char>(file),
                             std::istreambuf_iterator<char>()};
-        boost::replace_all(body, "<head>", retLivejs());
+        if (mustache) {
+          body = inja::render(body, mustache_values);
+        }
+        if (!disableljs) {
+          boost::replace_all(body, "<head>", retLivejs());
+        }
         res.content_length(body.size());
         res.body() = std::move(body);
         res.keep_alive(req.keep_alive());
         return res;
       }
-      return not_found(req.target());
+      return not_found(reqUrl);
     }
 
     // Attempt to open the file
@@ -132,7 +157,7 @@ private:
 
     // Handle the case where the file doesn't exist
     if (error_code == beast::errc::no_such_file_or_directory) {
-      return not_found(req.target());
+      return not_found(reqUrl);
     }
 
     // Handle an unknown error
