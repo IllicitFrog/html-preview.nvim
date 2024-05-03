@@ -1,12 +1,9 @@
 #pragma once
+#include "boost/beast/http/string_body.hpp"
+#include "boost/url/urls.hpp"
 #include "livejs.hpp"
 #include "utils.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/beast.hpp"
-#include "boost/beast/http/string_body.hpp"
-#include "boost/url.hpp"
-#include "boost/url/urls.hpp"
-#include <filesystem>
+#include <boost/algorithm/string/replace.hpp>
 #include <fstream>
 #include <inja/inja.hpp>
 #include <iostream>
@@ -21,31 +18,30 @@ namespace http = beast::http;
 namespace net = boost::asio;
 
 using tcp = boost::asio::ip::tcp;
+constexpr unsigned short Default_Port = 8090;
 
 class server {
 public:
   server();
-  server(std::string doc_root_, unsigned short port_,
-         const std::string &mustache_file, bool disableljs_,
-         const std::string &address_, std::string index_)
-      : acceptor{ioc, {net::ip::make_address(address_), port_}},
-        doc_root(std::move(doc_root_)), index(std::move(index_)),
-        disableljs(disableljs_) {
-    if (mustache_file != " ") {
-      std::ifstream jsonfile("mustache_file");
-      if (!jsonfile.good()) {
-        throw std::runtime_error("Failed to load specified Mustache file");
-      }
-      mustache_values = nlohmann::json::parse(jsonfile);
-      mustache = true;
+  explicit server(std::string doc_root_, unsigned short port_ = Default_Port,
+         std::string index_ = "index.html")
+      : acceptor{ioc, {net::ip::make_address("0.0.0.0"), port_}},
+        doc_root(std::move(doc_root_)), index(std::move(index_)) {}
+
+  void run() {
+    while (active) {
+      tcp::socket socket(ioc);
+      acceptor.accept(socket);
+      std::thread{&server::do_session, this, std::move(socket)}.detach();
     }
   }
 
-  void run() {
-    tcp::socket socket(ioc);
-    acceptor.accept(socket);
-    std::thread{&server::do_session, this, std::move(socket)}.detach();
+  void loadMustache(std::string json) {
+    mustache_values = nlohmann::json::parse(json);
+    mustache = true;
   }
+
+  void unloadMustache() { mustache = false; }
 
 private:
   std::string doc_root;
@@ -55,6 +51,7 @@ private:
   nlohmann::json mustache_values;
   bool mustache{};
   bool disableljs{};
+  bool active{true};
 
   // Return a response for the given request.
   //
