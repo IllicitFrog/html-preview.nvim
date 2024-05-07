@@ -8,7 +8,6 @@
 #include <inja/inja.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -18,15 +17,16 @@ namespace http = beast::http;
 namespace net = boost::asio;
 
 using tcp = boost::asio::ip::tcp;
-constexpr unsigned short Default_Port = 8090;
 
 class server {
 public:
   server();
-  explicit server(std::string doc_root_, unsigned short port_ = Default_Port,
-         std::string index_ = "index.html")
+  explicit server(std::string doc_root_, unsigned short port_,
+                  std::string index_)
       : acceptor{ioc, {net::ip::make_address("0.0.0.0"), port_}},
-        doc_root(std::move(doc_root_)), index(std::move(index_)) {}
+        doc_root(doc_root_), index(index_) {
+    this->run();
+  }
 
   void run() {
     while (active) {
@@ -36,9 +36,30 @@ public:
     }
   }
 
-  void loadMustache(std::string json) {
-    mustache_values = nlohmann::json::parse(json);
-    mustache = true;
+  // Enable/disable LiveJS
+  void liveJS() { disableljs = !disableljs; }
+
+  // Stop the server
+  void stop() {
+    active = false;
+    acceptor.close();
+    ioc.stop();
+    this->~server();
+  }
+
+  // Set index
+  void setIndex(std::string index_) { index = index_; }
+
+  // Set document root
+  void setDocRoot(std::string doc_root_) { doc_root = doc_root_; }
+
+  bool setMustache(std::string json) {
+    if (nlohmann::json::accept(json)) {
+      mustache_values = nlohmann::json::parse(json);
+      mustache = true;
+      return true;
+    }
+    return false;
   }
 
   void unloadMustache() { mustache = false; }
@@ -46,12 +67,12 @@ public:
 private:
   std::string doc_root;
   std::string index;
-  net::io_context ioc{1};
+  net::io_context ioc;
   tcp::acceptor acceptor;
   nlohmann::json mustache_values;
-  bool mustache{};
-  bool disableljs{};
-  bool active{true};
+  bool mustache = false;
+  bool disableljs = false;
+  bool active = true;
 
   // Return a response for the given request.
   //

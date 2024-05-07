@@ -3,13 +3,14 @@
 
 static int nwp_new(lua_State *L) {
   (*reinterpret_cast<server **>(lua_newuserdata(L, sizeof(server *)))) =
-      new server(luaL_checkstring(L, 1), luaL_checknumber(L, 2), luaL_checkstring(L, 3));
+      new server(luaL_checkstring(L, 1), luaL_checknumber(L, 2),
+                 luaL_checkstring(L, 3));
   luaL_setmetatable(L, "nwp");
   return 1;
 }
 
 static int nwp_delete(lua_State *L) {
-  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))->~server();
+  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))->stop();
   return 0;
 }
 
@@ -18,15 +19,31 @@ static int nwp_run(lua_State *L) {
   return 0;
 }
 
-static int nwp_loadMustache(lua_State *L) {
-  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))
-      ->loadMustache(luaL_checkstring(L, 2));
+static int nwp_stop(lua_State *L) {
+  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))->stop();
   return 0;
 }
 
-static int nwp_unloadMustache(lua_State *L) {
+static int nwp_setDocRoot(lua_State *L) {
   (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))
-      ->unloadMustache();
+      ->setDocRoot(luaL_checkstring(L, 2));
+  return 0;
+}
+
+static int nwp_setIndex(lua_State *L) {
+  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))
+      ->setIndex(luaL_checkstring(L, 2));
+  return 0;
+}
+
+static int nwp_setMustache(lua_State *L) {
+  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))
+      ->setMustache(luaL_checkstring(L, 2));
+  return 0;
+}
+
+static int nwp_liveJS(lua_State *L) {
+  (*reinterpret_cast<server **>(luaL_checkudata(L, 1, "nwp")))->liveJS();
   return 0;
 }
 
@@ -39,8 +56,11 @@ static void register_nwp(lua_State *L) {
 
   static const luaL_Reg funcs[] = {
       {"run", nwp_run},
-      {"loadMustache", nwp_loadMustache},
-      {"unloadMustache", nwp_unloadMustache},
+      {"stop", nwp_stop},
+      {"setDocRoot", nwp_setDocRoot},
+      {"setIndex", nwp_setIndex},
+      {"setMustache", nwp_setMustache},
+      {"liveJS", nwp_liveJS},
       {NULL, NULL},
   };
 

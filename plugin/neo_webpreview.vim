@@ -8,7 +8,11 @@ if exists("g:loaded_neowebpreview")
 endif
 let g:loaded_neowebpreview = 1
 
-command! -nargs=0 NWP lua require("neo_webpreview").start()
-command! -nargs=1 NWPBrowser lua require("neo_webpreview").set_browser()
-command! -nargs=0 NWPStop lua require("neo_webpreview").stop()
-command! -nargs=? NWPPreview lua require("neo_webpreview").preview()
+function! s:init() abort
+  augroup neo_webpreview
+    autocmd!
+    autocmd BufEnter,FileType * if index(['html', 'htm', 'json'], &filetype) !=# -1 | lua require("neo_webpreview") | endif
+  augroup END
+endfunction
+
+call s:init()

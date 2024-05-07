@@ -1,66 +1,59 @@
-local M = {}
--- local jit = require("jit")
--- if jit then
---   local os = string.lower(jit.os)
+local neoweb = require("libneo_webpreview")
 
-M.job = nil
-M.browser = nil
+local server = {}
+local browser = nil
+local cwd = nil
+local name = nil
+local port = 8090
 
-M.start = function()
-	if M.job then
-		return vim.notify(
-			"Neo_WebPreview Server already running, view at http://localhost:8089" .. ", or :NWPPreview",
-			vim.log.levels.INFO
-		)
-	end
-	if vim.fn.executable("nwp") == 0 then
-		--setup to build executable here
-		return vim.notify("Neo_WebPreview executable not found!", vim.log.levels.ERROR)
-	end
-
-	local cmd = { "nwp", "--rootdir", vim.fn.getcwd(), "--index", vim.fn.expand("%:.") }
-	M.job = vim.fn.jobstart(table.concat(cmd, " "), {
-		stdout_buffered = true,
-		on_stderr = function(_, data)
-			if data then
-				vim.notify(data, vim.log.levels.ERROR)
-			end
-		end,
-	})
-	vim.notify("Neoweb Preview started", vim.log.levels.INFO)
-  M.preview()
-end
-
-M.preview = function(browse)
-	if browse then
-		M.browser = browse
-	end
-	if M.browser == nil then
-		if vim.fn.executable("xdg-open") then
-			M.browser = "xdg-open"
-		else
-			return vim.notify("Unable to detect default browser", vim.log.levels.ERROR)
+vim.api.nvim_create_user_command("NeoWebPreview", function(opt_port)
+	if cwd ~= vim.fn.getcwd() then
+		cwd = vim.fn.getcwd()
+		if server then
+			server:setDocRoot(cwd)
 		end
 	end
-	vim.fn.jobstart(M.browser .. " localhost:8090/" .. vim.fn.expand("%:."), {
-		stdout_buffered = true,
-		on_stderr = function(_, data)
-			if data then
-				vim.notify(data, vim.log.levels.ERROR)
-			end
-		end,
-	})
-	return vim.notify(vim.fn.expand("%:.") .. " opened in browser", vim.log.levels.INFO)
-end
 
-M.stop = function()
-	if M.job then
-		vim.fn.jobstop(M.job)
-		M.job = nil
+	if name ~= vim.api.nvim_buf_get_name(0):sub(cwd, "") then
+		name = vim.api.nvim_buf_get_name(0):sub(cwd, "")
+		if server then
+			server:setIndex(name)
+		end
+	end
+
+	if not server then
+		port = opt_port or 8090
+		server = neoweb(cwd, port, name)
+	end
+
+	if not browser then
+		browser = "xdg-open"
+	end
+
+	io.popen(browser .. " http://localhost:" .. port, "r")
+	vim.notify("Neoweb Preview started", vim.log.levels.INFO)
+end, { nargs = 1 })
+
+vim.api.nvim_create_user_command(0, "NeoWebMustache", function(json)
+	if server then
+		if not json then
+			json = vim.api.nvim_buf_get_lines(0, 0, vim.api.nvim_buf_line_count(0), false)
+		end
+		server:loadMustasche(json)
+	end
+end, { nargs = 1 })
+
+vim.api.nvim_create_user_command(0, "NeoWebPreviewToggleLive", function()
+	if server then
+		server:liveJS()
+	end
+end, { nargs = 0 })
+
+vim.api.nvim_create_user_command(0, "NeoWebPreviewStop", function()
+	if server then
+		server:stop()
 		return vim.notify("Neoweb preview stopped", vim.loglevels.INFO)
 	else
 		return vim.notify("No instance of Neo_WebPreview", vim.log.levels.INFO)
 	end
-end
-
-return M
+end, { nargs = 0 })
