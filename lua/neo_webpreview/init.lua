@@ -1,4 +1,4 @@
-local neoweb = require("libneo_webpreview")
+local neoweb = require("libneoweb_preview")
 
 local server = {}
 local browser = nil
