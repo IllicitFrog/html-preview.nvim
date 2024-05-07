@@ -11,7 +11,7 @@ let g:loaded_neowebpreview = 1
 function! s:init() abort
   augroup neo_webpreview
     autocmd!
-    autocmd BufEnter,FileType * if index(['html'], &filetype) != -1 | lua require("neo_webpreview") | endif
+    autocmd BufEnter *.{html, htm, json} | lua require("neo_webpreview")
   augroup END
 endfunction
 
