@@ -1,12 +1,10 @@
-local neoweb = require("libneoweb_preview")
-
-local server = {}
-local browser = nil
-local cwd = nil
-local name = nil
-local port = 8090
-
 local function setup()
+	local server = {}
+	local browser = nil
+	local cwd = nil
+	local name = nil
+	local port = 8090
+	local neoweb = require("libneoweb_preview")
 	vim.api.nvim_create_user_command("NeoWebPreview", function(opt_port)
 		if cwd ~= vim.fn.getcwd() then
 			cwd = vim.fn.getcwd()
