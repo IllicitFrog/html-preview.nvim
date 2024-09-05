@@ -1,7 +1,7 @@
 package = "neoweb_preview"
 version = "0.0.1"
 source = {
-	url = "https://github.com/Olivine-Labs/lustache/archive/v1.3.1-0.tar.gz",
+	url = "http://htpc:3000/cory/neoweb_preview-0.0.1.tar.gz",
 	dir = "neoweb_preview-0.0.1",
 }
 description = {
@@ -13,7 +13,7 @@ description = {
 }
 dependencies = {
 	"lua >= 5.1",
-	"pegasus",
+	"pegasus >= 1.0.5-0",
 }
 build = {
 	type = "builtin",
