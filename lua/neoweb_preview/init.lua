@@ -1,6 +1,6 @@
 local pegasus = require("pegasus")
 local files = require("neoweb_preview.plugins.static")
-local config = require("newweb_preview.config")
+local config = require("neoweb_preview.config")
 local async = require("plenary.async")
 
 local M = {}
