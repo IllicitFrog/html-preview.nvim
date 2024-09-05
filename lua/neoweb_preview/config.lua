@@ -20,7 +20,7 @@ M.validate = function(user_config)
 		end
 	end
 
-	if M.config.browser ~= nil then
+	if user_config.browser ~= nil then
 		if type(M.config.browser) == "string" then
 			M.config.browser = user_config.browser
 		end
