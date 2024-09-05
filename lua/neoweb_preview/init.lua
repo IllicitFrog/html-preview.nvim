@@ -30,6 +30,7 @@ M.run = function()
 		end))
 	end
 
+  local cwd = vim.fn.getcwd()
 	local file_name = vim.api.nvim_buf_get_name(0):gsub(cwd, "")
 	vim.fn.jobstart(config.config.browser .. " http://0.0.0.0:" .. config.config.port .. "/" .. file_name)
 end
