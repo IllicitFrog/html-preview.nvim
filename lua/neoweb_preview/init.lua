@@ -18,21 +18,25 @@ M.run = function()
 			port = config.config.port,
 			plugins = {
 				files:new({
-					location = "/opt/sam",
+					location = vim.fn.getcwd(),
 				}),
 			},
 		})
 		async.run(M.server:start(function(request, response)
 			print("Do Server Stuff")
-      if M.kill then
-        return true
-      end
+			if M.kill then
+				return true
+			end
 		end))
 	end
+
+	local file_name = vim.api.nvim_buf_get_name(0):gsub(cwd, "")
+	vim.fn.jobstart(config.config.browser .. " http://0.0.0.0:" .. config.config.port .. "/" .. file_name)
 end
 
 M.stop = function()
-  M.kill = true
+	M.kill = true
+  M.server = nil
 end
 
 return M
