@@ -1,6 +1,6 @@
 local pegasus = require("pegasus")
-local files = require("server.plugins.static")
-local config = require("server.config")
+local files = require("plugins.static")
+local config = require("config")
 local async = require("plenary.async")
 
 local M = {}
