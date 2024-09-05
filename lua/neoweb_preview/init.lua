@@ -7,9 +7,10 @@ local M = {}
 
 M.server = nil
 M.kill = false
+M.config = {}
 
 M.setup = function(user_config)
-	config.validate(user_config)
+	M.config = config.validate(user_config)
 end
 
 M.run = function()
@@ -32,7 +33,7 @@ M.run = function()
 
   local cwd = vim.fn.getcwd()
 	local file_name = vim.api.nvim_buf_get_name(0):gsub(cwd, "")
-	vim.fn.jobstart(config.config.browser .. " http://0.0.0.0:" .. config.config.port .. "/" .. file_name)
+	vim.fn.jobstart(M.config.browser .. " http://0.0.0.0:" .. M.config.port .. "/" .. file_name)
 end
 
 M.stop = function()

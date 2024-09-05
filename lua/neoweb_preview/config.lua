@@ -7,11 +7,11 @@ M.config = {
 
 M.validate = function(user_config)
 	if not user_config then
-		return false
+		return M.config
 	end
 
 	if type(user_config) ~= "table" then
-		return false
+		return M.config
 	end
 
 	if user_config.port ~= nil then
@@ -25,6 +25,8 @@ M.validate = function(user_config)
 			M.config.browser = user_config.browser
 		end
 	end
+
+  return M.config
 end
 
 return M
