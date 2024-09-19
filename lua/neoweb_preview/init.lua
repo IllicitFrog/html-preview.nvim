@@ -1,34 +1,41 @@
+local server = require("neoweb_preview.server")
 local config = require("neoweb_preview.config")
-local llthreads2 = require("llthreads2")
-local task = require("neoweb_preview.task")
 
 local M = {}
 
-llthreads2.set_logger(function(msg) end)
-local running = false
+M.instances = {}
 
 M.setup = function(user_config)
-	config.validate(user_config)
+	local settings = config.validate(user_config)
+  local count = 0
+
 	vim.api.nvim_create_user_command("NeowebPreviewStart", function()
-		require("neoweb_preview").run()
+		local cwd = vim.fn.getcwd()
+		if not M.instances[cwd] then
+			M.instances[cwd] = server:new(cwd, settings.port + count)
+      count = count + 1
+		end
+		if not M.instances[cwd]:isRunning() then
+			M.instances[cwd]:start(settings.ip, settings.port, cwd)
+		end
+		--logic for starting from random buffer <---------------
+		local file_name = vim.api.nvim_buf_get_name(0):gsub(cwd, "")
+		vim.fn.jobstart(settings.browser .. " http://" .. settings.ip .. ":" .. M.instances[cwd].port .. file_name)
 	end, {})
 
 	vim.api.nvim_create_user_command("NeowebPreviewStop", function()
-		require("neoweb_preview").stop()
+		local cwd = vim.fn.getcwd()
+		if M.instances[cwd] then
+			M.instances[cwd]:stop()
+			M.instances[cwd] = nil
+		end
 	end, {})
 end
 
-M.run = function()
-	if not running then
-		running = true
-		local edit = task:gsub("{{port}}", config.config.port):gsub("{{root}}", '"' .. vim.fn.getcwd() .. '"')
-		local thread = llthreads2.new(edit)
-		thread:start(true, true)
-	end
-
-	local cwd = vim.fn.getcwd()
-	local file_name = vim.api.nvim_buf_get_name(0):gsub(cwd, "")
-	vim.fn.jobstart(config.config.browser .. " http://0.0.0.0:" .. config.config.port .. "/" .. file_name)
-end
+M.websocket = {
+	send = function(type, data)
+		server.websocket.send(type, data)
+	end,
+}
 
 return M
