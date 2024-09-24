@@ -2,44 +2,45 @@ local uv = vim.uv
 local websocket = require("neoweb_preview.websocket")
 local request = require("neoweb_preview.http.request")
 local response = require("neoweb_preview.http.response")
+local localhost = "127.0.0.1"
 
 local Server = {
 	server = uv.new_tcp(),
-	cwd = "",
 	is_active = false,
-  ip = "127.0.0.1",
-  port = 8090,
-	websock_clients = {},
+	port = 0,
+	websock_client = nil,
+	cwd = nil,
 
-	get_cwd = function(self)
-		return self.cwd
-	end,
-
-	isRunning = function(self)
+	running = function(self)
 		return self.is_active
 	end,
 
-	new = function(self, cwd, port)
-		local instance = {}
-		setmetatable(instance, {__index = self})
-		self.__index = self
-    instance.cwd = cwd
-		return instance
+	getPort = function(self)
+		return self.port
 	end,
 
-	start = function(self, bufnr)
-		-- options.enabled_buffers[bufnr] = vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
+	new = function(self)
+		return setmetatable({}, { __index = self })
+	end,
+
+	start = function(self, cwd)
+		self.cwd = cwd
 		self.is_active = true
 
-		self.server:bind(self.ip, self.port)
-		self.server:listen(128, function(err)
+		self.server:bind(localhost, self.port)
+		self.port = self.server:getsockname().port
+
+		--Begin listening
+		self.server:listen(12, function(err)
 			if err then
 				print("Error listening:", err)
 				return
 			end
+
 			local client = uv.new_tcp()
 			self.server:accept(client)
 
+			-- TCP Connection Read Loop
 			client:read_start(function(error, chunk)
 				if error then
 					print("Error reading:", error)
@@ -47,22 +48,30 @@ local Server = {
 					client:close()
 				end
 				if chunk then
-					if self.websock_clients[client] then
+					--Websocket closed from browser side
+					if self.websock_client == client then
 						if websocket.is_close(chunk) then
-							client:shutdown()
-							client:close()
-							self.websock_clients[client] = nil
+							print("Neoweb closed")
+							self.server:shutdown()
+							self.websock_client = nil
+							self.is_active = false
+              vim.schedule(function()
+                vim.api.nvim_del_augroup_by_name("Neoweb-" .. cwd)
+              end)
 						end
 					else
+						--HTTP request handling
 						local req = request:new(chunk)
+						--Is a websocket Upgrade Request
 						if req.headers["Upgrade"] == "websocket" then
-							client:write(websocket.handshake(req.headers["Sec-WebSocket-Key"]))
-							client:write("0\r\n\r\n")
-							self.websock_clients[client] = true
+							local res = websocket.handshake(req.headers["Sec-WebSocket-Key"])
+							client:write(res)
+							self.websock_client = client
+							print("Neoweb open")
 							client:keepalive(true, 0)
 						else
-							local headers, body = response:new(req, self.cwd)
-							client:keepalive(true, 90)
+							--HTTP file Request
+							local headers, body = response:new(req, self.cwd, self.port)
 							client:write(headers)
 							client:write(body)
 							client:write("0\r\n\r\n")
@@ -73,17 +82,12 @@ local Server = {
 		end)
 	end,
 
-	stop = function(self)
-		self.is_active = false
-		self.server:close()
-	end,
-
 	ws_send = function(self, data)
-		for _, client in pairs(self.websock_clients) do
-			local encode = websocket.encode(data)
-			client:write(encode)
-		end
+		local encode = websocket.frame(data)
+		self.websock_client:write(encode)
 	end,
 }
+
+Server.__index = Server
 
 return Server

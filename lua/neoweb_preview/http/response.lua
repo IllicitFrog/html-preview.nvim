@@ -1,3 +1,5 @@
+local iframe = require("neoweb_preview.http.iframe")
+
 local STATUS_TEXT = {
 	[200] = "OK",
 	[404] = "Not Found",
@@ -66,13 +68,13 @@ local Response = {
 	ext = "",
 	keepAlive = false,
 	statusCode = 200,
-  header = "",
+	header = "",
 
 	add_header = function(self, key, value)
 		self.header = self.header .. key .. ": " .. value .. "\r\n"
 	end,
 
-	new = function(self, req, cwd)
+	new = function(self, req, cwd, port)
 		self.ext = req.file:match("[^.]+$")
 		self.keepAlive = req.headers["Connection"] == "keep-alive"
 
@@ -80,6 +82,9 @@ local Response = {
 			self.statusCode = 505
 		elseif req.method ~= "GET" and req.method ~= "HEAD" then
 			self.statusCode = 405
+		elseif req.file == "/neoweb.html" then
+			self.statusCode = 200
+			self.body = iframe(port)
 		else
 			self.statusCode, self.body = load_file(cwd .. req.file)
 		end

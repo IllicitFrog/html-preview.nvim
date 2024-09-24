@@ -1,6 +1,6 @@
-local websocketKey = require("neoweb_preview.websocket.sha1")
-local utils = require("neoweb_preview.websocket.utils")
-local bit = require("bit")
+local websocketKey = require('neoweb_preview.websocket.sha1')
+local utils = require('neoweb_preview.websocket.utils')
+local bit = require('bit')
 
 local encode_header_small = function(header, payload)
 	return string.char(header, payload)
@@ -44,13 +44,15 @@ end
 
 local handshake = function(key)
 	local accept = websocketKey(key)
-	local header = [[ "HTTP/1.1 101 Switching Protocols\r\n
-              Upgrade: websocket\r\n
-              Connection: Upgrade\r\n
-              Sec-WebSocket-Accept: ]] .. accept .. [[\r\n
-              Sec-WebSocket-Version: 13\r\n
-              \r\n ]]
-	return header
+	local lines = {
+		'HTTP/1.1 101 Switching Protocols',
+		'Upgrade: websocket',
+		'Connection: Upgrade',
+    string.format('Sec-WebSocket-Accept: %s', accept),
+	}
+
+	table.insert(lines, '\r\n')
+	return table.concat(lines, '\r\n')
 end
 
 return {
