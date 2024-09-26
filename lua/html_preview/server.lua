@@ -1,7 +1,7 @@
 local uv = vim.uv
-local websocket = require("neoweb_preview.websocket")
-local request = require("neoweb_preview.http.request")
-local response = require("neoweb_preview.http.response")
+local websocket = require("html_preview.websocket")
+local request = require("html_preview.http.request")
+local response = require("html_preview.http.response")
 local localhost = "127.0.0.1"
 
 local Server = {

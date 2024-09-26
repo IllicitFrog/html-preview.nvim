@@ -1,5 +1,5 @@
-local websocketKey = require('neoweb_preview.websocket.sha1')
-local utils = require('neoweb_preview.websocket.utils')
+local websocketKey = require('html_preview.websocket.sha1')
+local utils = require('html_preview.websocket.utils')
 local bit = require('bit')
 
 local encode_header_small = function(header, payload)

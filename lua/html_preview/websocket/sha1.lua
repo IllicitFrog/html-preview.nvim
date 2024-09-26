@@ -1,6 +1,6 @@
 local mime = require("mime")
 local bit = require("bit")
-local utils = require("neoweb_preview.websocket.utils")
+local utils = require("html_preview.websocket.utils")
 
 
 local sha1 = function(msg)

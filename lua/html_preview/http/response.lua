@@ -1,4 +1,4 @@
-local iframe = require("neoweb_preview.http.iframe")
+local iframe = require("html_preview.http.iframe")
 
 local STATUS_TEXT = {
 	[200] = "OK",

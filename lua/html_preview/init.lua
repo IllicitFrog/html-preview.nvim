@@ -1,4 +1,4 @@
-local server = require("neoweb_preview.server")
+local server = require("html_preview.server")
 local vim = vim
 local M = {}
 
