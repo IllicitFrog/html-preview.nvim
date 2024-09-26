@@ -108,7 +108,7 @@ local Response = {
 
 	create_header = function(self)
 		self:add_header("Content-Type", self.mime)
-		self:add_header("Server", "Neoweb_Preview")
+		self:add_header("Server", "HTML_Preview")
 		self:add_header("Date", os.date("!%a, %d %b %Y %H:%M:%S GMT", os.time()))
 		if self.keepAlive then
 			self:add_header("Connection", "keep-alive")

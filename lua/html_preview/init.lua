@@ -19,7 +19,7 @@ M.setup = function()
 		browser = "xdg-open"
 	end
 
-	vim.api.nvim_create_user_command("NeowebPreviewStart", function(opts)
+	vim.api.nvim_create_user_command("HTMLPreview", function(opts)
 		local ext = vim.fn.expand("%:e")
 		if ext ~= "html" and ext ~= "htm" then
 			print("File is not html")
@@ -125,7 +125,7 @@ M.setup = function()
 	end, { nargs = '?' })
 
 	-- Manually Stop Server
-	vim.api.nvim_create_user_command("NeowebPreviewStop", function()
+	vim.api.nvim_create_user_command("HTMLPreviewStop", function()
 		local cwd = vim.fn.getcwd()
 		if M.instances[cwd] then
 			M.instances[cwd]:ws_send("STOP")

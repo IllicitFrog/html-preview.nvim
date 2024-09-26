@@ -22,8 +22,7 @@ local enclose = function(port, aspect)
       <head>
         <title>Neoweb Preview</title>
       </head>
-      <body style="margin: 0; padding: 0; overflow: hidden; background-image: url(neoweb/neoback.png); 
-      background-size: 33%; background-repeat: repeat">
+      <body style="margin: 0; padding: 0; overflow: hidden; background-color:black;">
       <div class="output">
       <iframe style="display: block; transform: translate(-50%, -50%); position: absolute; 
       top: 50%; left: 50%; border: ]] .. border .. [[; margin: auto; width:]] .. ratio[1] ..
