@@ -25,8 +25,8 @@ Lazy:
 
 ```lua
 
-"IllicitFrog/html_preview.nvim"
-ft = "html"
+"IllicitFrog/html_preview.nvim",
+ft = "html",
 config = function()
     require("html_preview").setup()
 end,
