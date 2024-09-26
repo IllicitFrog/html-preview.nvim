@@ -76,7 +76,7 @@ local Response = {
 		self.header = self.header .. key .. ": " .. value .. "\r\n"
 	end,
 
-	create = function(self, req, cwd, port, assets)
+	create = function(self, req, cwd, port, assets, aspect)
 		self.mime = mime_types[req.file:match("[^.]+$")] or "text/html"
 		self.keepAlive = req.headers["Connection"] == "keep-alive"
 		self.assets = assets
@@ -87,7 +87,7 @@ local Response = {
 			self.statusCode = 405
 		elseif req.file == "/neoweb.html" then
 			self.statusCode = 200
-			self.body = iframe(port)
+			self.body = iframe(port, aspect)
 		else
 			if req.file:sub(1, 7) == "/neoweb" or req.file == "/favicon.ico" then
 				self.statusCode, self.body = load_file(assets .. req.file)

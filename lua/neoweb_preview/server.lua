@@ -11,6 +11,7 @@ local Server = {
 	websock_client = nil,
 	cwd = "",
 	assets = "",
+	aspect = "full",
 
 	running = function(self)
 		return self.is_active
@@ -24,9 +25,13 @@ local Server = {
 		return setmetatable({}, { __index = self })
 	end,
 
-	start = function(self, cwd, OS)
+	start = function(self, cwd, OS, aspect)
 		self.cwd = cwd
 		self.is_active = true
+		if aspect ~= nil then
+			self.aspect = aspect
+		end
+
 		self.server = uv.new_tcp()
 
 		if OS == "Windows_NT" then
@@ -36,9 +41,9 @@ local Server = {
 		end
 
 		self.server:bind(localhost, self.port)
-    if self.port == 0 then
-      self.port = self.server:getsockname().port
-    end
+		if self.port == 0 then
+			self.port = self.server:getsockname().port
+		end
 
 		--Begin listening
 		self.server:listen(12, function(err)
@@ -80,7 +85,7 @@ local Server = {
 							client:keepalive(true, 0)
 						else
 							--HTTP file Request
-							local headers, body = response:create(req, self.cwd, self.port, self.assets)
+							local headers, body = response:create(req, self.cwd, self.port, self.assets, self.aspect)
 							client:write(headers)
 							client:write(body)
 							client:write("0\r\n\r\n")

@@ -19,7 +19,7 @@ M.setup = function()
 		browser = "xdg-open"
 	end
 
-	vim.api.nvim_create_user_command("NeowebPreviewStart", function()
+	vim.api.nvim_create_user_command("NeowebPreviewStart", function(opts)
 		local ext = vim.fn.expand("%:e")
 		if ext ~= "html" and ext ~= "htm" then
 			print("File is not html")
@@ -41,7 +41,8 @@ M.setup = function()
 				end
 			end
 			M.instances[cwd] = server:new()
-			M.instances[cwd]:start(cwd, OS)
+			M.instances[cwd]:start(cwd, OS, opts.fargs[1])
+
 
 			--logic for starting from random buffer <---------------
 			if M.instances[cwd].websock_client == nil then
@@ -121,7 +122,7 @@ M.setup = function()
 				end,
 			})
 		end
-	end, {})
+	end, { nargs = '?' })
 
 	-- Manually Stop Server
 	vim.api.nvim_create_user_command("NeowebPreviewStop", function()

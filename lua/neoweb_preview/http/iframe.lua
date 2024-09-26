@@ -1,7 +1,7 @@
 local aspect_ratios = setmetatable({
 	["full"] = { "100vw", "100vh" },
-	["letter"] = { "100vw", "calc(100vw * .75)" },
-	["mobile"] = { "calc(100vh * .75)", "100vh" },
+	["letter"] = { "calc(99vh * 1.33)", "99vh" },
+	["mobile"] = { "calc(99vh * .75)", "99vh" },
 }, {
 	__index = function()
 		return { "100vw", "100vh" }
@@ -9,16 +9,25 @@ local aspect_ratios = setmetatable({
 })
 
 local enclose = function(port, aspect)
-  local ratio = aspect_ratios["mobile"]
+	local ratio = aspect_ratios[aspect]
+	local border = "none"
+
+	if aspect ~= "full" then
+		border = "2px solid white"
+	end
+
 	local iframe = [[
     <!DOCTYPE html>
     <html>
       <head>
         <title>Neoweb Preview</title>
       </head>
-      <body style="margin: 0; padding: 0; background-color: black">
+      <body style="margin: 0; padding: 0; overflow: hidden; background-image: url(neoweb/neoback.png); 
+      background-size: 33%; background-repeat: repeat">
       <div class="output">
-      <iframe style="display: block; border: none; margin: auto; width:]] ..ratio[1] .. "; height:" .. ratio[2] .. [[;"></iframe>
+      <iframe style="display: block; transform: translate(-50%, -50%); position: absolute; 
+      top: 50%; left: 50%; border: ]] .. border .. [[; margin: auto; width:]] .. ratio[1] ..
+      "; height:" .. ratio[2] .. [[;"></iframe>
       </div>
       </body>
       <script>
