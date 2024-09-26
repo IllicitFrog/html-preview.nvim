@@ -36,9 +36,10 @@ local error_body = function(statusCode)
     <head>
       <title> {{TITLE}}  </title>
     </head>
-    <body>
-      <h1> {{TITLE}} </h1>
-      <p> {{MESSAGE}} </p>
+    <body style="background-color: black; color: white">
+      <img style="display: block; margin-left: auto; margin-right: auto; width: 25%;" src="neoweb/error.png" />
+      <h1 style="text-align: center"> {{MESSAGE}} {{TITLE}} </h1>
+      <p style="text-align: center"> "Something went wrong!!" </p>
     </body>
   </html>
   ]]
@@ -65,18 +66,20 @@ end
 local Response = {
 
 	body = nil,
-	ext = "",
+	mime = "",
 	keepAlive = false,
-	statusCode = 200,
+	statusCode = 0,
 	header = "",
+	assets = "",
 
 	add_header = function(self, key, value)
 		self.header = self.header .. key .. ": " .. value .. "\r\n"
 	end,
 
-	new = function(self, req, cwd, port)
-		self.ext = req.file:match("[^.]+$")
+	create = function(self, req, cwd, port, assets)
+		self.mime = mime_types[req.file:match("[^.]+$")] or "text/html"
 		self.keepAlive = req.headers["Connection"] == "keep-alive"
+		self.assets = assets
 
 		if req.version ~= "HTTP/1.1" then
 			self.statusCode = 505
@@ -86,21 +89,25 @@ local Response = {
 			self.statusCode = 200
 			self.body = iframe(port)
 		else
-			self.statusCode, self.body = load_file(cwd .. req.file)
+			if req.file:sub(1, 7) == "/neoweb" or req.file == "/favicon.ico" then
+				self.statusCode, self.body = load_file(assets .. req.file)
+			else
+				self.statusCode, self.body = load_file(cwd .. req.file)
+			end
 		end
 
-		if self.body == nil then
-			if mime_types[self.ext] == "text/html" then
-				self.body = error_body(self.statusCode)
+		if self.statusCode ~= 200 then
+			if self.mime:sub(1, 5) == "image" then
+				self.statusCode, self.body = load_file(assets .. "neoweb/image404.png")
 			else
-				self.body = "loadfile image"
+				self.body = error_body(self.statusCode)
 			end
 		end
 		return self:create_header(), toHex(#self.body) .. "\r\n" .. self.body .. "\r\n"
 	end,
 
 	create_header = function(self)
-		self:add_header("Content-Type", mime_types[self.ext] or "text/html")
+		self:add_header("Content-Type", self.mime)
 		self:add_header("Server", "Neoweb_Preview")
 		self:add_header("Date", os.date("!%a, %d %b %Y %H:%M:%S GMT", os.time()))
 		if self.keepAlive then

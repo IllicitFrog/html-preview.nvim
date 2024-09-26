@@ -1,13 +1,24 @@
-local enclose = function(port)
+local aspect_ratios = setmetatable({
+	["full"] = { "100vw", "100vh" },
+	["letter"] = { "100vw", "calc(100vw * .75)" },
+	["mobile"] = { "calc(100vh * .75)", "100vh" },
+}, {
+	__index = function()
+		return { "100vw", "100vh" }
+	end,
+})
+
+local enclose = function(port, aspect)
+  local ratio = aspect_ratios["mobile"]
 	local iframe = [[
     <!DOCTYPE html>
     <html>
       <head>
         <title>Neoweb Preview</title>
       </head>
-      <body style="margin: 0; padding: 0;">
+      <body style="margin: 0; padding: 0; background-color: black">
       <div class="output">
-      <iframe style="display: block; border: none; width: 100vw; height: 100vh;"></iframe>
+      <iframe style="display: block; border: none; margin: auto; width:]] ..ratio[1] .. "; height:" .. ratio[2] .. [[;"></iframe>
       </div>
       </body>
       <script>
@@ -28,6 +39,9 @@ local enclose = function(port)
             window.close();
           }
         }
+        socket.onerror = () => {
+          window.close();
+        };
 
       </script>
       </html>

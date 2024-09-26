@@ -9,7 +9,8 @@ local Server = {
 	is_active = false,
 	port = 0,
 	websock_client = nil,
-	cwd = nil,
+	cwd = "",
+	assets = "",
 
 	running = function(self)
 		return self.is_active
@@ -23,12 +24,21 @@ local Server = {
 		return setmetatable({}, { __index = self })
 	end,
 
-	start = function(self, cwd)
+	start = function(self, cwd, OS)
 		self.cwd = cwd
 		self.is_active = true
+		self.server = uv.new_tcp()
+
+		if OS == "Windows_NT" then
+			self.assets = string.match(debug.getinfo(2, "S").source:sub(2), "(.*[/\\])") .. "http\\"
+		else
+			self.assets = string.match(debug.getinfo(2, "S").source:sub(2), "(.*/)") .. "http/"
+		end
 
 		self.server:bind(localhost, self.port)
-		self.port = self.server:getsockname().port
+    if self.port == 0 then
+      self.port = self.server:getsockname().port
+    end
 
 		--Begin listening
 		self.server:listen(12, function(err)
@@ -52,12 +62,11 @@ local Server = {
 					if self.websock_client == client then
 						if websocket.is_close(chunk) then
 							print("Neoweb closed")
-							self.server:shutdown()
-							self.websock_client = nil
+							self.server:close_reset()
 							self.is_active = false
-              vim.schedule(function()
-                vim.api.nvim_del_augroup_by_name("Neoweb-" .. cwd)
-              end)
+							vim.schedule(function()
+								vim.api.nvim_del_augroup_by_name("Neoweb-" .. cwd)
+							end)
 						end
 					else
 						--HTTP request handling
@@ -71,7 +80,7 @@ local Server = {
 							client:keepalive(true, 0)
 						else
 							--HTTP file Request
-							local headers, body = response:new(req, self.cwd, self.port)
+							local headers, body = response:create(req, self.cwd, self.port, self.assets)
 							client:write(headers)
 							client:write(body)
 							client:write("0\r\n\r\n")
