@@ -66,7 +66,7 @@ local Server = {
 					--Websocket closed from browser side
 					if self.websock_client == client then
 						if websocket.is_close(chunk) then
-							print("Neoweb closed")
+							print("HTML Preview closed")
 							self.server:close_reset()
 							self.is_active = false
 							vim.schedule(function()
@@ -81,7 +81,7 @@ local Server = {
 							local res = websocket.handshake(req.headers["Sec-WebSocket-Key"])
 							client:write(res)
 							self.websock_client = client
-							print("Neoweb open")
+							print("HTML Preview open")
 							client:keepalive(true, 0)
 						else
 							--HTTP file Request

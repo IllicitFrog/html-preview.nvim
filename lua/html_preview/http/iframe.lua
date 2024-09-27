@@ -10,17 +10,17 @@ local aspect_ratios = setmetatable({
 
 local enclose = function(port, aspect)
 	local ratio = aspect_ratios[aspect]
-	local border = "none"
+	local border = "2px solid white"
 
-	if aspect ~= "full" then
-		border = "2px solid white"
+	if aspect == nil or aspect == "full" then
+		border = "none"
 	end
 
 	local iframe = [[
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Neoweb Preview</title>
+        <title>HTML Preview</title>
       </head>
       <body style="margin: 0; padding: 0; overflow: hidden; background-color:black;">
       <div class="output">
