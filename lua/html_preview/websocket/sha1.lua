@@ -1,7 +1,27 @@
-local mime = require("mime")
 local bit = require("bit")
 local utils = require("html_preview.websocket.utils")
 
+local b64 = function(data)
+	local bytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+	return (
+		(data:gsub(".", function(x)
+			local r, b = "", x:byte()
+			for i = 8, 1, -1 do
+				r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and "1" or "0")
+			end
+			return r
+		end) .. "0000"):gsub("%d%d%d?%d?%d?%d?", function(x)
+			if #x < 6 then
+				return ""
+			end
+			local c = 0
+			for i = 1, 6 do
+				c = c + (x:sub(i, i) == "1" and 2 ^ (6 - i) or 0)
+			end
+			return bytes:sub(c + 1, c + 1)
+		end) .. ({ "", "==", "=" })[#data % 3 + 1]
+	)
+end
 
 local sha1 = function(msg)
 	local h0 = 0x67452301
@@ -88,12 +108,16 @@ local sha1 = function(msg)
 	h3 = bit.band(h3, 0xffffffff)
 	h4 = bit.band(h4, 0xffffffff)
 
-	return utils.write_int32(h0) .. utils.write_int32(h1) .. utils.write_int32(h2) .. utils.write_int32(h3) .. utils.write_int32(h4)
+	return utils.write_int32(h0)
+		.. utils.write_int32(h1)
+		.. utils.write_int32(h2)
+		.. utils.write_int32(h3)
+		.. utils.write_int32(h4)
 end
 
 local websocketKey = function(key)
 	local magic = sha1(key .. "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
-	return (mime.b64(magic))
+	return (b64(magic))
 end
 
 return websocketKey
