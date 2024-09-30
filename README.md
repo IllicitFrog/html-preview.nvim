@@ -11,7 +11,7 @@ but required to many build dependencies and issues cross platform.
 
 It by no means is polished but I intend to maintain it.
 
-![](https://github.com/IllicitFrog/html_preview.nvim/resources/HTMLPreview.gif)
+![](https://github.com/IllicitFrog/html-preview.nvim/blob/main/resources/HTMLPreview.gif)
 
 Features:
 
