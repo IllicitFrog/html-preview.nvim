@@ -11,6 +11,8 @@ but required to many build dependencies and issues cross platform.
 
 It by no means is polished but I intend to maintain it.
 
+![](https://github.com/IllicitFrog/html_preview.nvim/resources/HTMLPreview.gif)
+
 Features:
 
 - Built using Neovim native Luv api no external dependencies

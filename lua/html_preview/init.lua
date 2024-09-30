@@ -1,5 +1,4 @@
 local server = require("html_preview.server")
-local vim = vim
 local M = {}
 
 M.instances = {}
@@ -42,7 +41,6 @@ M.setup = function()
 			end
 			M.instances[cwd] = server:new()
 			M.instances[cwd]:start(cwd, OS, opts.fargs[1])
-
 
 			--logic for starting from random buffer <---------------
 			if M.instances[cwd].websock_client == nil then
@@ -122,7 +120,7 @@ M.setup = function()
 				end,
 			})
 		end
-	end, { nargs = '?' })
+	end, { nargs = "?" })
 
 	-- Manually Stop Server
 	vim.api.nvim_create_user_command("HTMLPreviewStop", function()
